@@ -3,192 +3,155 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>IntelNews V2</title>
+<title>IntelNews LIVE</title>
 
 <style>
 :root {
-  --bg: #050505;
-  --panel: #0b0f0b;
-  --green: #00ff88;
-  --yellow: #ffcc00;
-  --danger: #ff3b3b;
-  --text: #b6ffda;
+  --bg:#050505;
+  --panel:#0b0f0b;
+  --green:#00ff88;
+  --yellow:#ffcc00;
+  --danger:#ff3b3b;
+  --text:#b6ffda;
 }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: "Courier New", monospace;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: 120px;
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Courier New",monospace;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:120px;
 }
 
-header {
-  padding: 16px;
-  border-bottom: 1px solid #133;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+header{
+  padding:16px;
+  border-bottom:1px solid #133;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-.logo { color: var(--green); }
+.logo{color:var(--green);}
 
-.threat {
-  font-size: 12px;
-  padding: 4px 8px;
-  border: 1px solid;
+.threat{
+  font-size:12px;
+  padding:4px 8px;
+  border:1px solid;
 }
 
-.threat.low { color: var(--green); border-color: var(--green); }
-.threat.medium { color: var(--yellow); border-color: var(--yellow); }
-.threat.high { color: var(--danger); border-color: var(--danger); animation: blink 1s infinite; }
+.low{color:var(--green);border-color:var(--green);}
+.medium{color:var(--yellow);border-color:var(--yellow);}
+.high{color:var(--danger);border-color:var(--danger);animation:blink 1s infinite;}
 
-@keyframes blink {
+@keyframes blink{
   0%,100%{opacity:1;}
   50%{opacity:0.3;}
 }
 
-.feed { padding: 16px; }
+.feed{padding:16px;}
 
-.card {
-  background: var(--panel);
-  border: 1px solid #133;
-  padding: 14px;
-  margin-bottom: 16px;
-  cursor: pointer;
+.card{
+  background:var(--panel);
+  border:1px solid #133;
+  padding:14px;
+  margin-bottom:16px;
 }
 
-.tag { font-size: 11px; color: var(--green); margin-bottom: 6px; }
-.title { font-size: 15px; margin-bottom: 6px; }
-.summary { font-size: 13px; opacity: 0.8; margin-bottom: 6px; }
+.tag{font-size:11px;color:var(--green);margin-bottom:6px;}
+.title{font-size:14px;margin-bottom:6px;}
+.summary{font-size:12px;opacity:0.8;margin-bottom:6px;}
+.meta{font-size:11px;}
 
-.meta { font-size: 12px; }
-
-.impact {
-  margin-top: 10px;
-  font-size: 12px;
-  border-top: 1px dashed #133;
-  padding-top: 8px;
-  display: none;
-}
-
-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #060a06;
-  border-top: 1px solid #133;
-  display: flex;
-  justify-content: space-around;
-  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
-}
-
-.nav-item {
-  text-align: center;
-  font-size: 11px;
-  color: #0a8;
-  cursor: pointer;
-}
-
-.nav-item.active {
-  color: var(--green);
-}
 </style>
 </head>
-
 <body>
 
 <header>
-  <div class="logo">INTEL//SITREP</div>
-  <div id="threatLevel" class="threat low">THREAT: NISKI</div>
+  <div class="logo">INTEL//LIVE MONITOR</div>
+  <div id="threat" class="threat low">THREAT: NISKI</div>
 </header>
 
-<div class="feed" id="feed"></div>
-
-<nav>
-  <div class="nav-item active" onclick="switchCategory('polska', this)">Polska</div>
-  <div class="nav-item" onclick="switchCategory('swiat', this)">Świat</div>
-  <div class="nav-item" onclick="switchCategory('rynki', this)">Rynki</div>
-  <div class="nav-item" onclick="switchCategory('cyber', this)">Cyber</div>
-</nav>
+<div class="feed" id="feed">
+Ładowanie danych...
+</div>
 
 <script>
 
-const data = {
-  polska: [
-    { tag:"POLITYKA", title:"Nowa ustawa energetyczna", summary:"Zmiany w regulacjach rynku energii.", risk:6 }
-  ],
-  swiat: [
-    { tag:"WOJNA", title:"Eskalacja konfliktu", summary:"Zniszczona infrastruktura paliwowa.", risk:8 }
-  ],
-  rynki: [
-    { tag:"BANKI", title:"Problemy sektora finansowego", summary:"Spadek indeksów bankowych.", risk:7 }
-  ],
-  cyber: [
-    { tag:"CYBER", title:"Masowy atak ransomware", summary:"Zakłócenia w systemach bankowych.", risk:9 }
-  ]
-};
+const feeds = [
+  "https://feeds.reuters.com/reuters/worldNews",
+  "http://feeds.bbci.co.uk/news/world/rss.xml",
+  "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+  "https://www.gov.pl/rss"
+];
 
-function getImpact(tag) {
-  switch(tag) {
-    case "WOJNA": return "→ Ropa ↑ | Orlen ↑ | Linie lotnicze ↓";
-    case "CYBER": return "→ Banki ↓ | Cybersec ↑";
-    case "BANKI": return "→ WIG20 ↓ | PLN ↓";
-    default: return "→ Wpływ ograniczony";
+const keywordsHigh = ["war","attack","conflict","explosion","invasion","cyber","hack","missile"];
+const keywordsMedium = ["bank","oil","gas","sanction","military","crisis"];
+
+function calculateRisk(title){
+  const lower = title.toLowerCase();
+  if(keywordsHigh.some(k=>lower.includes(k))) return 9;
+  if(keywordsMedium.some(k=>lower.includes(k))) return 7;
+  return 4;
+}
+
+function updateThreat(maxRisk){
+  const el=document.getElementById("threat");
+  if(maxRisk>=8){
+    el.innerText="THREAT: WYSOKI";
+    el.className="threat high";
+  }else if(maxRisk>=6){
+    el.innerText="THREAT: PODWYŻSZONY";
+    el.className="threat medium";
+  }else{
+    el.innerText="THREAT: NISKI";
+    el.className="threat low";
   }
 }
 
-function updateThreat(category) {
-  const maxRisk = Math.max(...data[category].map(n => n.risk));
-  const threat = document.getElementById("threatLevel");
-
-  if (maxRisk >= 8) {
-    threat.innerText = "THREAT: WYSOKI";
-    threat.className = "threat high";
-  } else if (maxRisk >= 6) {
-    threat.innerText = "THREAT: PODWYŻSZONY";
-    threat.className = "threat medium";
-  } else {
-    threat.innerText = "THREAT: NISKI";
-    threat.className = "threat low";
-  }
+async function fetchFeed(url){
+  const api=`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+  const res=await fetch(api);
+  const data=await res.json();
+  return data.items||[];
 }
 
-function renderFeed(category) {
-  const feed = document.getElementById("feed");
-  feed.innerHTML = "";
+async function loadNews(){
+  const feedEl=document.getElementById("feed");
+  feedEl.innerHTML="Ładowanie...";
+  let allNews=[];
+  
+  for(const f of feeds){
+    try{
+      const items=await fetchFeed(f);
+      allNews=allNews.concat(items.slice(0,5));
+    }catch(e){}
+  }
 
-  data[category].forEach((item, index) => {
-    feed.innerHTML += `
-      <div class="card" onclick="toggleImpact(${index})">
-        <div class="tag">[${item.tag}]</div>
-        <div class="title">${item.title}</div>
-        <div class="summary">${item.summary}</div>
-        <div class="meta">RISK: ${item.risk}/10</div>
-        <div class="impact" id="impact-${index}">
-          ${getImpact(item.tag)}
-        </div>
+  allNews.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
+
+  let maxRisk=0;
+  feedEl.innerHTML="";
+
+  allNews.slice(0,15).forEach(n=>{
+    const risk=calculateRisk(n.title);
+    if(risk>maxRisk) maxRisk=risk;
+
+    feedEl.innerHTML+=`
+      <div class="card">
+        <div class="tag">LIVE</div>
+        <div class="title">${n.title}</div>
+        <div class="summary">${n.description?.replace(/<[^>]+>/g,'').slice(0,120)}...</div>
+        <div class="meta">RISK: ${risk}/10</div>
       </div>
     `;
   });
 
-  updateThreat(category);
+  updateThreat(maxRisk);
 }
 
-function toggleImpact(id) {
-  const el = document.getElementById("impact-"+id);
-  el.style.display = el.style.display === "block" ? "none" : "block";
-}
-
-function switchCategory(category, el) {
-  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-  el.classList.add("active");
-  renderFeed(category);
-}
-
-renderFeed("polska");
+loadNews();
+setInterval(loadNews,120000);
 
 </script>
 
