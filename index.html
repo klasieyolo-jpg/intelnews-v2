@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>IntelNews – Situation Mode</title>
+<title>IntelNews V2</title>
 
 <style>
 :root {
@@ -22,36 +22,18 @@ body {
   font-family: "Courier New", monospace;
   padding-top: env(safe-area-inset-top);
   padding-bottom: 120px;
-  letter-spacing: 0.5px;
 }
-
-/* HEADER */
 
 header {
   padding: 18px;
   border-bottom: 1px solid var(--green-dim);
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
 
 .logo {
-  font-size: 18px;
   color: var(--green);
 }
-
-.status {
-  font-size: 12px;
-  color: var(--green);
-  animation: blink 1.5s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* FEED */
 
 .feed {
   padding: 16px;
@@ -62,23 +44,12 @@ header {
   border: 1px solid var(--green-dim);
   padding: 14px;
   margin-bottom: 16px;
-  position: relative;
-}
-
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--green);
 }
 
 .tag {
   font-size: 11px;
   color: var(--green);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .title {
@@ -94,16 +65,11 @@ header {
 
 .meta {
   font-size: 12px;
-  color: var(--green-dim);
 }
-
-/* RISK LEVEL */
 
 .risk-high { color: var(--danger); }
 .risk-medium { color: #ffcc00; }
 .risk-low { color: var(--green); }
-
-/* NAV */
 
 nav {
   position: fixed;
@@ -121,35 +87,28 @@ nav {
   text-align: center;
   font-size: 11px;
   color: var(--green-dim);
+  position: relative;
+  cursor: pointer;
 }
 
 .nav-item .icon {
   font-size: 20px;
-  margin-bottom: 4px;
 }
 
 .nav-item.active {
   color: var(--green);
-  text-shadow: 0 0 8px var(--green);
+  text-shadow: 0 0 6px var(--green);
 }
 
-/* subtle scanline effect */
-
-body::after {
-  content: "";
-  pointer-events: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(0,255,136,0.03),
-    rgba(0,255,136,0.03) 1px,
-    transparent 1px,
-    transparent 3px
-  );
+.alert-badge {
+  position: absolute;
+  top: -4px;
+  right: 10px;
+  background: var(--danger);
+  color: white;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 10px;
 }
 </style>
 </head>
@@ -158,56 +117,93 @@ body::after {
 
 <header>
   <div class="logo">INTEL//SITREP</div>
-  <div class="status">● LIVE</div>
+  <div id="activeCategory">Polska</div>
 </header>
 
-<div class="feed">
-
-  <div class="card">
-    <div class="tag">[WOJNA]</div>
-    <div class="title">Atak na infrastrukturę energetyczną</div>
-    <div class="summary">Zniszczona rafineria. Możliwe zakłócenia dostaw ropy.</div>
-    <div class="meta risk-high">RYZYKO: WYSOKIE (8/10)</div>
-  </div>
-
-  <div class="card">
-    <div class="tag">[CYBER]</div>
-    <div class="title">Masowy atak DDoS na sektor bankowy</div>
-    <div class="summary">Zakłócenia w systemach płatniczych w Europie Środkowej.</div>
-    <div class="meta risk-medium">RYZYKO: ŚREDNIE (7/10)</div>
-  </div>
-
-  <div class="card">
-    <div class="tag">[RYNKI]</div>
-    <div class="title">Wzrost cen ropy po ataku</div>
-    <div class="summary">Kontrakty futures +3.2%. Możliwa presja na inflację.</div>
-    <div class="meta risk-low">WPŁYW: UMIARKOWANY</div>
-  </div>
-
-</div>
+<div class="feed" id="feed"></div>
 
 <nav>
-  <div class="nav-item active">
+  <div class="nav-item active" onclick="switchCategory('polska', this)">
     <div class="icon">⌂</div>
     Polska
+    <div class="alert-badge" id="badge-polska"></div>
   </div>
-  <div class="nav-item">
+  <div class="nav-item" onclick="switchCategory('swiat', this)">
     <div class="icon">◎</div>
     Świat
+    <div class="alert-badge" id="badge-swiat"></div>
   </div>
-  <div class="nav-item">
+  <div class="nav-item" onclick="switchCategory('rynki', this)">
     <div class="icon">▣</div>
     Rynki
+    <div class="alert-badge" id="badge-rynki"></div>
   </div>
-  <div class="nav-item">
+  <div class="nav-item" onclick="switchCategory('cyber', this)">
     <div class="icon">⌘</div>
     Cyber
-  </div>
-  <div class="nav-item">
-    <div class="icon">⚙</div>
-    System
+    <div class="alert-badge" id="badge-cyber"></div>
   </div>
 </nav>
+
+<script>
+
+const data = {
+  polska: [
+    { tag:"POLITYKA", title:"Nowa ustawa energetyczna", summary:"Zmiany w regulacjach rynku energii.", risk:6 }
+  ],
+  swiat: [
+    { tag:"WOJNA", title:"Eskalacja konfliktu", summary:"Zniszczona infrastruktura paliwowa.", risk:8 }
+  ],
+  rynki: [
+    { tag:"BANKI", title:"Problemy sektora finansowego", summary:"Spadek indeksów bankowych.", risk:7 }
+  ],
+  cyber: [
+    { tag:"CYBER", title:"Masowy atak ransomware", summary:"Zakłócenia w systemach bankowych.", risk:9 }
+  ]
+};
+
+function renderFeed(category) {
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+  data[category].forEach(item => {
+    const riskClass =
+      item.risk >= 8 ? "risk-high" :
+      item.risk >= 6 ? "risk-medium" : "risk-low";
+
+    feed.innerHTML += `
+      <div class="card">
+        <div class="tag">[${item.tag}]</div>
+        <div class="title">${item.title}</div>
+        <div class="summary">${item.summary}</div>
+        <div class="meta ${riskClass}">RISK: ${item.risk}/10</div>
+      </div>
+    `;
+  });
+}
+
+function switchCategory(category, el) {
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("activeCategory").innerText = category.toUpperCase();
+  renderFeed(category);
+}
+
+function updateBadges() {
+  Object.keys(data).forEach(cat => {
+    const high = data[cat].filter(n => n.risk >= 8).length;
+    const badge = document.getElementById("badge-"+cat);
+    if (high > 0) {
+      badge.innerText = high;
+    } else {
+      badge.style.display = "none";
+    }
+  });
+}
+
+renderFeed("polska");
+updateBadges();
+
+</script>
 
 </body>
 </html>
