@@ -40,12 +40,21 @@ header {
   border: 1px solid var(--green-dim);
   padding: 14px;
   margin-bottom: 16px;
+  cursor: pointer;
 }
 
 .tag { font-size: 11px; color: var(--green); margin-bottom: 6px; }
 .title { font-size: 15px; margin-bottom: 6px; }
 .summary { font-size: 13px; opacity: 0.8; margin-bottom: 6px; }
 .meta { font-size: 12px; }
+
+.impact {
+  margin-top: 10px;
+  font-size: 12px;
+  border-top: 1px dashed var(--green-dim);
+  padding-top: 8px;
+  display: none;
+}
 
 .risk-high { color: var(--danger); }
 .risk-medium { color: #ffcc00; }
@@ -88,10 +97,6 @@ nav {
   padding: 2px 5px;
   border-radius: 10px;
 }
-
-.toggle {
-  margin: 10px 0;
-}
 </style>
 </head>
 
@@ -108,22 +113,18 @@ nav {
   <div class="nav-item active" onclick="switchCategory('polska', this)">
     <div class="icon">⌂</div>
     Polska
-    <div class="alert-badge" id="badge-polska"></div>
   </div>
   <div class="nav-item" onclick="switchCategory('swiat', this)">
     <div class="icon">◎</div>
     Świat
-    <div class="alert-badge" id="badge-swiat"></div>
   </div>
   <div class="nav-item" onclick="switchCategory('rynki', this)">
     <div class="icon">▣</div>
     Rynki
-    <div class="alert-badge" id="badge-rynki"></div>
   </div>
   <div class="nav-item" onclick="switchCategory('cyber', this)">
     <div class="icon">⌘</div>
     Cyber
-    <div class="alert-badge" id="badge-cyber"></div>
   </div>
   <div class="nav-item" onclick="switchCategory('system', this)">
     <div class="icon">⚙</div>
@@ -138,7 +139,7 @@ const data = {
     { tag:"POLITYKA", title:"Nowa ustawa energetyczna", summary:"Zmiany w regulacjach rynku energii.", risk:6 }
   ],
   swiat: [
-    { tag:"WOJNA", title:"Eskalacja konfliktu", summary:"Zniszczona infrastruktura paliwowa.", risk:8 }
+    { tag:"WOJNA", title:"Eskalacja konfliktu na Bliskim Wschodzie", summary:"Zniszczona infrastruktura paliwowa.", risk:8 }
   ],
   rynki: [
     { tag:"BANKI", title:"Problemy sektora finansowego", summary:"Spadek indeksów bankowych.", risk:7 }
@@ -149,38 +150,52 @@ const data = {
   system: []
 };
 
+function getImpact(tag) {
+  switch(tag) {
+    case "WOJNA":
+      return "→ Ropa ↑ | Orlen ↑ | Linie lotnicze ↓ | USD ↑";
+    case "CYBER":
+      return "→ Banki ↓ | Cybersec ↑ | Spółki IT ↑";
+    case "BANKI":
+      return "→ WIG20 ↓ | Obligacje ↑ | PLN ↓";
+    case "POLITYKA":
+      return "→ Spółki regulowane ↑/↓ | GPW zmienność ↑";
+    default:
+      return "→ Brak danych";
+  }
+}
+
 function renderFeed(category) {
   const feed = document.getElementById("feed");
   feed.innerHTML = "";
 
   if (category === "system") {
-    feed.innerHTML = `
-      <div class="card">
-        <div class="title">Ustawienia alertów</div>
-        <div class="toggle">☑ Polityka krajowa</div>
-        <div class="toggle">☑ Wojny</div>
-        <div class="toggle">☑ Cyber</div>
-        <div class="toggle">☑ Rynki</div>
-        <div class="summary">W przyszłości tutaj dodamy próg risk i powiadomienia push.</div>
-      </div>
-    `;
+    feed.innerHTML = `<div class="card"><div class="title">System operacyjny</div><div class="summary">Moduł alertów i analiza będą rozwijane.</div></div>`;
     return;
   }
 
-  data[category].forEach(item => {
+  data[category].forEach((item, index) => {
     const riskClass =
       item.risk >= 8 ? "risk-high" :
       item.risk >= 6 ? "risk-medium" : "risk-low";
 
     feed.innerHTML += `
-      <div class="card">
+      <div class="card" onclick="toggleImpact(${index})">
         <div class="tag">[${item.tag}]</div>
         <div class="title">${item.title}</div>
         <div class="summary">${item.summary}</div>
         <div class="meta ${riskClass}">RISK: ${item.risk}/10</div>
+        <div class="impact" id="impact-${index}">
+          ${getImpact(item.tag)}
+        </div>
       </div>
     `;
   });
+}
+
+function toggleImpact(id) {
+  const el = document.getElementById("impact-"+id);
+  el.style.display = el.style.display === "block" ? "none" : "block";
 }
 
 function switchCategory(category, el) {
@@ -190,17 +205,7 @@ function switchCategory(category, el) {
   renderFeed(category);
 }
 
-function updateBadges() {
-  Object.keys(data).forEach(cat => {
-    if (cat === "system") return;
-    const high = data[cat].filter(n => n.risk >= 8).length;
-    const badge = document.getElementById("badge-"+cat);
-    if (badge && high > 0) badge.innerText = high;
-  });
-}
-
 renderFeed("polska");
-updateBadges();
 
 </script>
 
