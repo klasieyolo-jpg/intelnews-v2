@@ -10,9 +10,9 @@
   --bg: #050505;
   --panel: #0b0f0b;
   --green: #00ff88;
-  --green-dim: #008f55;
-  --text: #b6ffda;
+  --yellow: #ffcc00;
   --danger: #ff3b3b;
+  --text: #b6ffda;
 }
 
 body {
@@ -25,19 +25,35 @@ body {
 }
 
 header {
-  padding: 18px;
-  border-bottom: 1px solid var(--green-dim);
+  padding: 16px;
+  border-bottom: 1px solid #133;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 .logo { color: var(--green); }
+
+.threat {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid;
+}
+
+.threat.low { color: var(--green); border-color: var(--green); }
+.threat.medium { color: var(--yellow); border-color: var(--yellow); }
+.threat.high { color: var(--danger); border-color: var(--danger); animation: blink 1s infinite; }
+
+@keyframes blink {
+  0%,100%{opacity:1;}
+  50%{opacity:0.3;}
+}
 
 .feed { padding: 16px; }
 
 .card {
   background: var(--panel);
-  border: 1px solid var(--green-dim);
+  border: 1px solid #133;
   padding: 14px;
   margin-bottom: 16px;
   cursor: pointer;
@@ -46,19 +62,16 @@ header {
 .tag { font-size: 11px; color: var(--green); margin-bottom: 6px; }
 .title { font-size: 15px; margin-bottom: 6px; }
 .summary { font-size: 13px; opacity: 0.8; margin-bottom: 6px; }
+
 .meta { font-size: 12px; }
 
 .impact {
   margin-top: 10px;
   font-size: 12px;
-  border-top: 1px dashed var(--green-dim);
+  border-top: 1px dashed #133;
   padding-top: 8px;
   display: none;
 }
-
-.risk-high { color: var(--danger); }
-.risk-medium { color: #ffcc00; }
-.risk-low { color: var(--green); }
 
 nav {
   position: fixed;
@@ -66,7 +79,7 @@ nav {
   left: 0;
   right: 0;
   background: #060a06;
-  border-top: 1px solid var(--green-dim);
+  border-top: 1px solid #133;
   display: flex;
   justify-content: space-around;
   padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
@@ -75,27 +88,12 @@ nav {
 .nav-item {
   text-align: center;
   font-size: 11px;
-  color: var(--green-dim);
-  position: relative;
+  color: #0a8;
   cursor: pointer;
 }
 
-.nav-item .icon { font-size: 20px; }
-
 .nav-item.active {
   color: var(--green);
-  text-shadow: 0 0 6px var(--green);
-}
-
-.alert-badge {
-  position: absolute;
-  top: -4px;
-  right: 10px;
-  background: var(--danger);
-  color: white;
-  font-size: 10px;
-  padding: 2px 5px;
-  border-radius: 10px;
 }
 </style>
 </head>
@@ -104,32 +102,16 @@ nav {
 
 <header>
   <div class="logo">INTEL//SITREP</div>
-  <div id="activeCategory">POLSKA</div>
+  <div id="threatLevel" class="threat low">THREAT: NISKI</div>
 </header>
 
 <div class="feed" id="feed"></div>
 
 <nav>
-  <div class="nav-item active" onclick="switchCategory('polska', this)">
-    <div class="icon">⌂</div>
-    Polska
-  </div>
-  <div class="nav-item" onclick="switchCategory('swiat', this)">
-    <div class="icon">◎</div>
-    Świat
-  </div>
-  <div class="nav-item" onclick="switchCategory('rynki', this)">
-    <div class="icon">▣</div>
-    Rynki
-  </div>
-  <div class="nav-item" onclick="switchCategory('cyber', this)">
-    <div class="icon">⌘</div>
-    Cyber
-  </div>
-  <div class="nav-item" onclick="switchCategory('system', this)">
-    <div class="icon">⚙</div>
-    System
-  </div>
+  <div class="nav-item active" onclick="switchCategory('polska', this)">Polska</div>
+  <div class="nav-item" onclick="switchCategory('swiat', this)">Świat</div>
+  <div class="nav-item" onclick="switchCategory('rynki', this)">Rynki</div>
+  <div class="nav-item" onclick="switchCategory('cyber', this)">Cyber</div>
 </nav>
 
 <script>
@@ -139,29 +121,38 @@ const data = {
     { tag:"POLITYKA", title:"Nowa ustawa energetyczna", summary:"Zmiany w regulacjach rynku energii.", risk:6 }
   ],
   swiat: [
-    { tag:"WOJNA", title:"Eskalacja konfliktu na Bliskim Wschodzie", summary:"Zniszczona infrastruktura paliwowa.", risk:8 }
+    { tag:"WOJNA", title:"Eskalacja konfliktu", summary:"Zniszczona infrastruktura paliwowa.", risk:8 }
   ],
   rynki: [
     { tag:"BANKI", title:"Problemy sektora finansowego", summary:"Spadek indeksów bankowych.", risk:7 }
   ],
   cyber: [
     { tag:"CYBER", title:"Masowy atak ransomware", summary:"Zakłócenia w systemach bankowych.", risk:9 }
-  ],
-  system: []
+  ]
 };
 
 function getImpact(tag) {
   switch(tag) {
-    case "WOJNA":
-      return "→ Ropa ↑ | Orlen ↑ | Linie lotnicze ↓ | USD ↑";
-    case "CYBER":
-      return "→ Banki ↓ | Cybersec ↑ | Spółki IT ↑";
-    case "BANKI":
-      return "→ WIG20 ↓ | Obligacje ↑ | PLN ↓";
-    case "POLITYKA":
-      return "→ Spółki regulowane ↑/↓ | GPW zmienność ↑";
-    default:
-      return "→ Brak danych";
+    case "WOJNA": return "→ Ropa ↑ | Orlen ↑ | Linie lotnicze ↓";
+    case "CYBER": return "→ Banki ↓ | Cybersec ↑";
+    case "BANKI": return "→ WIG20 ↓ | PLN ↓";
+    default: return "→ Wpływ ograniczony";
+  }
+}
+
+function updateThreat(category) {
+  const maxRisk = Math.max(...data[category].map(n => n.risk));
+  const threat = document.getElementById("threatLevel");
+
+  if (maxRisk >= 8) {
+    threat.innerText = "THREAT: WYSOKI";
+    threat.className = "threat high";
+  } else if (maxRisk >= 6) {
+    threat.innerText = "THREAT: PODWYŻSZONY";
+    threat.className = "threat medium";
+  } else {
+    threat.innerText = "THREAT: NISKI";
+    threat.className = "threat low";
   }
 }
 
@@ -169,28 +160,21 @@ function renderFeed(category) {
   const feed = document.getElementById("feed");
   feed.innerHTML = "";
 
-  if (category === "system") {
-    feed.innerHTML = `<div class="card"><div class="title">System operacyjny</div><div class="summary">Moduł alertów i analiza będą rozwijane.</div></div>`;
-    return;
-  }
-
   data[category].forEach((item, index) => {
-    const riskClass =
-      item.risk >= 8 ? "risk-high" :
-      item.risk >= 6 ? "risk-medium" : "risk-low";
-
     feed.innerHTML += `
       <div class="card" onclick="toggleImpact(${index})">
         <div class="tag">[${item.tag}]</div>
         <div class="title">${item.title}</div>
         <div class="summary">${item.summary}</div>
-        <div class="meta ${riskClass}">RISK: ${item.risk}/10</div>
+        <div class="meta">RISK: ${item.risk}/10</div>
         <div class="impact" id="impact-${index}">
           ${getImpact(item.tag)}
         </div>
       </div>
     `;
   });
+
+  updateThreat(category);
 }
 
 function toggleImpact(id) {
@@ -201,7 +185,6 @@ function toggleImpact(id) {
 function switchCategory(category, el) {
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   el.classList.add("active");
-  document.getElementById("activeCategory").innerText = category.toUpperCase();
   renderFeed(category);
 }
 
