@@ -1,11 +1,75 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>IntelNews V2</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>IntelNews V2</title>
 
-  nav {
+<style>
+:root {
+  --bg: #0f0f0f;
+  --card: #1a1a1a;
+  --gold: #d4af37;
+  --text: #ffffff;
+  --muted: #888;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: 110px;
+}
+
+/* HEADER */
+header {
+  padding: 20px 18px 10px 18px;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--gold);
+}
+
+/* FEED */
+.feed {
+  padding: 0 18px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.tag {
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.summary {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.risk {
+  font-size: 13px;
+  color: var(--gold);
+}
+
+/* NAVIGATION */
+nav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -13,7 +77,7 @@
   background: #121212;
   display: flex;
   justify-content: space-around;
-  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  padding: 16px 0 calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid #222;
 }
 
@@ -26,66 +90,39 @@
 }
 
 .nav-item .icon {
-  font-size: 20px;
-  margin-bottom: 4px;
+  font-size: 22px;
+  margin-bottom: 6px;
 }
 
 .nav-item.active {
   color: var(--gold);
 }
+</style>
+</head>
 
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: 80px;
-    }
+<body>
 
-    header {
-      padding: 16px;
-      font-weight: bold;
-      font-size: 20px;
-      color: var(--gold);
-    }
+<header>IntelNews</header>
 
-    .feed {
-      padding: 0 16px;
-    }
+<div class="feed">
 
-    .card {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
+  <div class="card">
+    <div class="tag">WOJNA</div>
+    <div class="title">Atak na infrastrukturę energetyczną</div>
+    <div class="summary">Zniszczona część instalacji. Możliwe napięcia na rynku surowców.</div>
+    <div class="risk">Risk Score: 8/10</div>
+  </div>
 
-    .tag {
-      font-size: 12px;
-      color: var(--gold);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-    }
+  <div class="card">
+    <div class="tag">CYBER</div>
+    <div class="title">Duży cyberatak na sektor bankowy</div>
+    <div class="summary">Próba naruszenia systemów płatniczych w Europie.</div>
+    <div class="risk">Risk Score: 7/10</div>
+  </div>
 
-    .title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
+</div>
 
-    .summary {
-      font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    .risk {
-      font-size: 13px;
-      color: var(--gold);
-    }
-
-    <nav>
+<nav>
   <div class="nav-item active">
     <div class="icon">🏠</div>
     <div class="label">Polska</div>
@@ -107,46 +144,6 @@
     <div class="label">Ustawienia</div>
   </div>
 </nav>
-
-    nav div {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    nav .active {
-      color: var(--gold);
-    }
-  </style>
-</head>
-<body>
-
-  <header>IntelNews</header>
-
-  <div class="feed">
-
-    <div class="card">
-      <div class="tag">WOJNA</div>
-      <div class="title">Atak na infrastrukturę energetyczną</div>
-      <div class="summary">Zniszczona część instalacji. Możliwe napięcia na rynku surowców.</div>
-      <div class="risk">Risk Score: 8/10</div>
-    </div>
-
-    <div class="card">
-      <div class="tag">CYBER</div>
-      <div class="title">Duży cyberatak na sektor bankowy</div>
-      <div class="summary">Próba naruszenia systemów płatniczych w Europie.</div>
-      <div class="risk">Risk Score: 7/10</div>
-    </div>
-
-  </div>
-
-  <nav>
-    <div class="active">Polska</div>
-    <div>Świat</div>
-    <div>Rynki</div>
-    <div>Tech</div>
-    <div>⚙</div>
-  </nav>
 
 </body>
 </html>
