@@ -3,145 +3,209 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>IntelNews V2</title>
+<title>IntelNews – Situation Mode</title>
 
 <style>
 :root {
-  --bg: #0f0f0f;
-  --card: #1a1a1a;
-  --gold: #d4af37;
-  --text: #ffffff;
-  --muted: #888;
+  --bg: #050505;
+  --panel: #0b0f0b;
+  --green: #00ff88;
+  --green-dim: #008f55;
+  --text: #b6ffda;
+  --danger: #ff3b3b;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
+  font-family: "Courier New", monospace;
   padding-top: env(safe-area-inset-top);
-  padding-bottom: 110px;
-}
-
-/* HEADER */
-header {
-  padding: 20px 18px 10px 18px;
-  font-weight: 700;
-  font-size: 22px;
-  color: var(--gold);
-}
-
-/* FEED */
-.feed {
-  padding: 0 18px;
-}
-
-.card {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.tag {
-  font-size: 12px;
-  color: var(--gold);
-  margin-bottom: 8px;
-  text-transform: uppercase;
+  padding-bottom: 120px;
   letter-spacing: 0.5px;
 }
 
-.title {
-  font-size: 17px;
-  font-weight: 600;
+/* HEADER */
+
+header {
+  padding: 18px;
+  border-bottom: 1px solid var(--green-dim);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 18px;
+  color: var(--green);
+}
+
+.status {
+  font-size: 12px;
+  color: var(--green);
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* FEED */
+
+.feed {
+  padding: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--green-dim);
+  padding: 14px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--green);
+}
+
+.tag {
+  font-size: 11px;
+  color: var(--green);
   margin-bottom: 8px;
 }
 
+.title {
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
 .summary {
-  font-size: 14px;
-  color: var(--muted);
-  margin-bottom: 10px;
-}
-
-.risk {
   font-size: 13px;
-  color: var(--gold);
+  opacity: 0.8;
+  margin-bottom: 6px;
 }
 
-/* NAVIGATION */
+.meta {
+  font-size: 12px;
+  color: var(--green-dim);
+}
+
+/* RISK LEVEL */
+
+.risk-high { color: var(--danger); }
+.risk-medium { color: #ffcc00; }
+.risk-low { color: var(--green); }
+
+/* NAV */
+
 nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #121212;
+  background: #060a06;
+  border-top: 1px solid var(--green-dim);
   display: flex;
   justify-content: space-around;
-  padding: 16px 0 calc(16px + env(safe-area-inset-bottom));
-  border-top: 1px solid #222;
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
 }
 
 .nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 12px;
-  color: var(--muted);
+  text-align: center;
+  font-size: 11px;
+  color: var(--green-dim);
 }
 
 .nav-item .icon {
-  font-size: 22px;
-  margin-bottom: 6px;
+  font-size: 20px;
+  margin-bottom: 4px;
 }
 
 .nav-item.active {
-  color: var(--gold);
+  color: var(--green);
+  text-shadow: 0 0 8px var(--green);
+}
+
+/* subtle scanline effect */
+
+body::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0,255,136,0.03),
+    rgba(0,255,136,0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 </style>
 </head>
 
 <body>
 
-<header>IntelNews</header>
+<header>
+  <div class="logo">INTEL//SITREP</div>
+  <div class="status">● LIVE</div>
+</header>
 
 <div class="feed">
 
   <div class="card">
-    <div class="tag">WOJNA</div>
+    <div class="tag">[WOJNA]</div>
     <div class="title">Atak na infrastrukturę energetyczną</div>
-    <div class="summary">Zniszczona część instalacji. Możliwe napięcia na rynku surowców.</div>
-    <div class="risk">Risk Score: 8/10</div>
+    <div class="summary">Zniszczona rafineria. Możliwe zakłócenia dostaw ropy.</div>
+    <div class="meta risk-high">RYZYKO: WYSOKIE (8/10)</div>
   </div>
 
   <div class="card">
-    <div class="tag">CYBER</div>
-    <div class="title">Duży cyberatak na sektor bankowy</div>
-    <div class="summary">Próba naruszenia systemów płatniczych w Europie.</div>
-    <div class="risk">Risk Score: 7/10</div>
+    <div class="tag">[CYBER]</div>
+    <div class="title">Masowy atak DDoS na sektor bankowy</div>
+    <div class="summary">Zakłócenia w systemach płatniczych w Europie Środkowej.</div>
+    <div class="meta risk-medium">RYZYKO: ŚREDNIE (7/10)</div>
+  </div>
+
+  <div class="card">
+    <div class="tag">[RYNKI]</div>
+    <div class="title">Wzrost cen ropy po ataku</div>
+    <div class="summary">Kontrakty futures +3.2%. Możliwa presja na inflację.</div>
+    <div class="meta risk-low">WPŁYW: UMIARKOWANY</div>
   </div>
 
 </div>
 
 <nav>
   <div class="nav-item active">
-    <div class="icon">🏠</div>
-    <div class="label">Polska</div>
+    <div class="icon">⌂</div>
+    Polska
   </div>
   <div class="nav-item">
-    <div class="icon">🌍</div>
-    <div class="label">Świat</div>
+    <div class="icon">◎</div>
+    Świat
   </div>
   <div class="nav-item">
-    <div class="icon">📊</div>
-    <div class="label">Rynki</div>
+    <div class="icon">▣</div>
+    Rynki
   </div>
   <div class="nav-item">
-    <div class="icon">🧠</div>
-    <div class="label">Tech</div>
+    <div class="icon">⌘</div>
+    Cyber
   </div>
   <div class="nav-item">
-    <div class="icon">⚙️</div>
-    <div class="label">Ustawienia</div>
+    <div class="icon">⚙</div>
+    System
   </div>
 </nav>
 
