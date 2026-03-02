@@ -31,13 +31,9 @@ header {
   justify-content: space-between;
 }
 
-.logo {
-  color: var(--green);
-}
+.logo { color: var(--green); }
 
-.feed {
-  padding: 16px;
-}
+.feed { padding: 16px; }
 
 .card {
   background: var(--panel);
@@ -46,26 +42,10 @@ header {
   margin-bottom: 16px;
 }
 
-.tag {
-  font-size: 11px;
-  color: var(--green);
-  margin-bottom: 6px;
-}
-
-.title {
-  font-size: 15px;
-  margin-bottom: 6px;
-}
-
-.summary {
-  font-size: 13px;
-  opacity: 0.8;
-  margin-bottom: 6px;
-}
-
-.meta {
-  font-size: 12px;
-}
+.tag { font-size: 11px; color: var(--green); margin-bottom: 6px; }
+.title { font-size: 15px; margin-bottom: 6px; }
+.summary { font-size: 13px; opacity: 0.8; margin-bottom: 6px; }
+.meta { font-size: 12px; }
 
 .risk-high { color: var(--danger); }
 .risk-medium { color: #ffcc00; }
@@ -91,9 +71,7 @@ nav {
   cursor: pointer;
 }
 
-.nav-item .icon {
-  font-size: 20px;
-}
+.nav-item .icon { font-size: 20px; }
 
 .nav-item.active {
   color: var(--green);
@@ -110,6 +88,10 @@ nav {
   padding: 2px 5px;
   border-radius: 10px;
 }
+
+.toggle {
+  margin: 10px 0;
+}
 </style>
 </head>
 
@@ -117,7 +99,7 @@ nav {
 
 <header>
   <div class="logo">INTEL//SITREP</div>
-  <div id="activeCategory">Polska</div>
+  <div id="activeCategory">POLSKA</div>
 </header>
 
 <div class="feed" id="feed"></div>
@@ -143,6 +125,10 @@ nav {
     Cyber
     <div class="alert-badge" id="badge-cyber"></div>
   </div>
+  <div class="nav-item" onclick="switchCategory('system', this)">
+    <div class="icon">⚙</div>
+    System
+  </div>
 </nav>
 
 <script>
@@ -159,12 +145,28 @@ const data = {
   ],
   cyber: [
     { tag:"CYBER", title:"Masowy atak ransomware", summary:"Zakłócenia w systemach bankowych.", risk:9 }
-  ]
+  ],
+  system: []
 };
 
 function renderFeed(category) {
   const feed = document.getElementById("feed");
   feed.innerHTML = "";
+
+  if (category === "system") {
+    feed.innerHTML = `
+      <div class="card">
+        <div class="title">Ustawienia alertów</div>
+        <div class="toggle">☑ Polityka krajowa</div>
+        <div class="toggle">☑ Wojny</div>
+        <div class="toggle">☑ Cyber</div>
+        <div class="toggle">☑ Rynki</div>
+        <div class="summary">W przyszłości tutaj dodamy próg risk i powiadomienia push.</div>
+      </div>
+    `;
+    return;
+  }
+
   data[category].forEach(item => {
     const riskClass =
       item.risk >= 8 ? "risk-high" :
@@ -190,13 +192,10 @@ function switchCategory(category, el) {
 
 function updateBadges() {
   Object.keys(data).forEach(cat => {
+    if (cat === "system") return;
     const high = data[cat].filter(n => n.risk >= 8).length;
     const badge = document.getElementById("badge-"+cat);
-    if (high > 0) {
-      badge.innerText = high;
-    } else {
-      badge.style.display = "none";
-    }
+    if (badge && high > 0) badge.innerText = high;
   });
 }
 
