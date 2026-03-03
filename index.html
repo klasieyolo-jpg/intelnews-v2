@@ -72,11 +72,15 @@ background:var(--panel);
 border:1px solid #133;
 padding:14px;
 margin-bottom:16px;
-cursor:pointer;
 }
 
 .tag{font-size:11px;color:var(--green);margin-bottom:6px;}
-.title{font-size:14px;margin-bottom:6px;}
+.title{
+font-size:14px;
+margin-bottom:6px;
+cursor:pointer;
+color:var(--green);
+}
 .summary{font-size:12px;opacity:0.8;margin-bottom:6px;}
 .meta{font-size:11px;}
 
@@ -86,6 +90,21 @@ font-size:11px;
 border-top:1px dashed #133;
 padding-top:6px;
 display:none;
+}
+
+.article-view{
+padding:16px;
+line-height:1.6;
+white-space:pre-line;
+}
+
+.back-btn{
+margin-bottom:20px;
+padding:8px 12px;
+background:var(--panel);
+border:1px solid #133;
+color:var(--green);
+cursor:pointer;
 }
 
 nav{
@@ -111,7 +130,6 @@ cursor:pointer;
 .nav-item.active{
 color:var(--green);
 }
-
 </style>
 </head>
 
@@ -139,23 +157,10 @@ color:var(--green);
 let currentCategory = "all";
 let globalNews = [];
 
-const feeds = [
-"https://www.gov.pl/rss",
-"https://www.money.pl/rss/",
-"https://www.bankier.pl/rss/wiadomosci.xml",
-"https://feeds.reuters.com/reuters/worldNews",
-"http://feeds.bbci.co.uk/news/world/rss.xml",
-"https://www.cnbc.com/id/100003114/device/rss/rss.html",
-"https://www.aljazeera.com/xml/rss/all.xml"
-];
-
-const highKeywords = ["war","attack","conflict","invasion","missile","cyber","hack","wojna","atak","zamach"];
-const mediumKeywords = ["bank","oil","gas","sanction","military","crisis","ropa","gaz","bank"];
-
 function calculateRisk(text){
 const t = text.toLowerCase();
-if(highKeywords.some(k=>t.includes(k))) return 9;
-if(mediumKeywords.some(k=>t.includes(k))) return 7;
+if(t.includes("war")||t.includes("wojna")||t.includes("atak")) return 9;
+if(t.includes("bank")||t.includes("ropa")||t.includes("oil")) return 7;
 return 4;
 }
 
@@ -178,13 +183,6 @@ return "→ WIG20 ↓ | PLN ↓";
 return "→ Wpływ ograniczony";
 }
 
-async function fetchFeed(url){
-const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
-const res = await fetch(api);
-const data = await res.json();
-return data.items || [];
-}
-
 async function loadNews(){
 const response = await fetch("/api/news");
 const data = await response.json();
@@ -205,17 +203,8 @@ feedEl.innerHTML = "";
 let maxRisk = 0;
 let index = 0;
 
-if(currentCategory==="system"){
-feedEl.innerHTML = `
-<div class="card">
-<div class="title">SYSTEM</div>
-<div class="summary">Moduł alertów i tłumaczeń będzie rozwinięty w wersji backend.</div>
-</div>`;
-updateThreat(0);
-return;
-}
-
 for(const n of globalNews){
+
 const cat = detectCategory(n.title);
 if(currentCategory!=="all" && cat!==currentCategory) continue;
 
@@ -225,19 +214,41 @@ if(risk>maxRisk) maxRisk=risk;
 const desc = n.description?.replace(/<[^>]+>/g,'').slice(0,160);
 
 feedEl.innerHTML+=`
-<div class="card" onclick="toggleImpact(${index})">
+<div class="card">
 <div class="tag">LIVE</div>
-<div class="title">${n.title}</div>
+<div class="title" onclick="openArticle('${n.link}')">${n.title}</div>
 <div class="summary">${desc}...</div>
 <div class="meta">RISK: ${risk}/10</div>
 <div class="impact" id="impact-${index}">
 ${getImpact(n.title)}
+</div>
+<div style="margin-top:6px;font-size:11px;cursor:pointer;color:#0a8;" onclick="toggleImpact(${index})">
+▼ Pokaż wpływ
 </div>
 </div>`;
 index++;
 }
 
 updateThreat(maxRisk);
+}
+
+async function openArticle(url){
+
+document.getElementById("feed").innerHTML="Ładowanie artykułu...";
+
+const response = await fetch("/api/article?url="+encodeURIComponent(url));
+const data = await response.json();
+
+if(!data.success){
+document.getElementById("feed").innerHTML="Nie udało się pobrać artykułu";
+return;
+}
+
+document.getElementById("feed").innerHTML=`
+<div class="article-view">
+<button class="back-btn" onclick="loadNews()">⬅ POWRÓT</button>
+${data.content}
+</div>`;
 }
 
 function updateThreat(risk){
