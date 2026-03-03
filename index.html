@@ -70,6 +70,12 @@ padding:14px;
 margin-bottom:16px;
 }
 
+.new-badge{
+color:#ff3b3b;
+font-size:10px;
+margin-bottom:4px;
+}
+
 .tag{font-size:11px;color:var(--green);margin-bottom:6px;}
 
 .title{
@@ -166,6 +172,8 @@ color:var(--green);
 
 let currentCategory = "all";
 let globalNews = [];
+let previousNewsLinks = [];
+let newNewsLinks = [];
 
 function calculateRisk(text){
 const t = text.toLowerCase();
@@ -194,28 +202,36 @@ return "→ Wpływ ograniczony";
 }
 
 async function loadNews(){
+
 const response = await fetch("/api/news");
 const data = await response.json();
 
 if(!data.success){
-  document.getElementById("feed").innerHTML = "Błąd pobierania danych";
-  return;
+document.getElementById("feed").innerHTML = "Błąd pobierania danych";
+return;
 }
 
-globalNews = data.news;
+const fetchedNews = data.news;
+const currentLinks = fetchedNews.map(n => n.link);
+
+newNewsLinks = currentLinks.filter(link => !previousNewsLinks.includes(link));
+previousNewsLinks = currentLinks;
+
+globalNews = fetchedNews;
 renderNews();
 }
 
 function renderNews(){
+
 const feedEl = document.getElementById("feed");
 feedEl.innerHTML = "";
 
 let maxRisk = 0;
 
-for(const n of globalNews){
+globalNews.forEach((n, index)=>{
 
 const cat = detectCategory(n.title);
-if(currentCategory!=="all" && cat!==currentCategory) continue;
+if(currentCategory!=="all" && cat!==currentCategory) return;
 
 const risk = calculateRisk(n.title);
 if(risk>maxRisk) maxRisk=risk;
@@ -224,12 +240,15 @@ const desc = n.description?.replace(/<[^>]+>/g,'');
 
 feedEl.innerHTML+=`
 <div class="card">
+${newNewsLinks.includes(n.link) ? '<div class="new-badge">NOWE</div>' : ''}
 <div class="tag">LIVE</div>
-<div class="title" onclick="openArticle(${globalNews.indexOf(n)})">${n.title}</div>
+<div class="title" onclick="openArticle(${index})">${n.title}</div>
 <div class="summary">${desc.slice(0,160)}...</div>
 <div class="meta">RISK: ${risk}/10</div>
-</div>`;
-}
+</div>
+`;
+
+});
 
 updateThreat(maxRisk);
 }
@@ -237,7 +256,6 @@ updateThreat(maxRisk);
 function openArticle(index){
 
 const n = globalNews[index];
-const risk = calculateRisk(n.title);
 const desc = n.description?.replace(/<[^>]+>/g,'');
 
 document.getElementById("feed").innerHTML=`
