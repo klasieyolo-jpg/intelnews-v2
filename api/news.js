@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     if(!text) return "";
 
     try{
-      const response = await fetch("https://libretranslate.de/translate",{
+      const response = await fetch("https://translate.argosopentech.com/translate",{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       return data.translatedText || text;
 
     } catch {
-      return text; // fallback jeśli tłumaczenie padnie
+      return text;
     }
   }
 
@@ -68,36 +68,41 @@ export default async function handler(req, res) {
 
     all.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
 
-    const cleaned = [];
+    const selected = all.slice(0,20);
 
-    for(const item of all.slice(0,25)){
+    // 🔥 RÓWNOLEGŁE tłumaczenie (dużo szybciej)
+    const translated = await Promise.all(
+      selected.map(async item => {
 
-      const rawTitle = item.title;
-      const rawDesc = item.description?.replace(/<[^>]+>/g,'').slice(0,300);
+        const rawTitle = item.title;
+        const rawDesc = item.description?.replace(/<[^>]+>/g,'').slice(0,300);
 
-      const titlePL = await translateText(rawTitle);
-      const descPL = await translateText(rawDesc);
+        const [titlePL, descPL] = await Promise.all([
+          translateText(rawTitle),
+          translateText(rawDesc)
+        ]);
 
-      cleaned.push({
-        title: titlePL,
-        description: descPL,
-        pubDate: item.pubDate,
-        risk: calculateRisk(titlePL),
-        category: detectCategory(titlePL),
-        link: item.link
-      });
-    }
+        return {
+          title: titlePL,
+          description: descPL,
+          pubDate: item.pubDate,
+          risk: calculateRisk(titlePL),
+          category: detectCategory(titlePL),
+          link: item.link
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
-      count: cleaned.length,
-      news: cleaned
+      count: translated.length,
+      news: translated
     });
 
-  } catch {
+  } catch (err){
     res.status(500).json({
-      success: false,
-      error: "Backend error"
+      success:false,
+      error:"Backend error"
     });
   }
 }
