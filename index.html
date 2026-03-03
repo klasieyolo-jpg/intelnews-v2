@@ -61,6 +61,7 @@ border:1px solid;
 
 .feed{
 padding:16px;
+transition:transform 0.25s ease;
 }
 
 .card{
@@ -106,12 +107,26 @@ line-height:1.6;
 }
 
 .back-btn{
+display:inline-flex;
+align-items:center;
+gap:8px;
 margin-bottom:20px;
-padding:8px 12px;
-background:var(--panel);
-border:1px solid #133;
+padding:8px 14px;
+background:transparent;
+border:1px solid var(--green);
 color:var(--green);
 cursor:pointer;
+font-size:12px;
+letter-spacing:1px;
+}
+
+.back-btn:before{
+content:"";
+width:8px;
+height:8px;
+border-left:2px solid var(--green);
+border-bottom:2px solid var(--green);
+transform:rotate(45deg);
 }
 
 .source-btn{
@@ -157,9 +172,7 @@ color:var(--green);
 <div id="threat" class="threat low">THREAT: NISKI</div>
 </header>
 
-<div class="feed" id="feed">
-Ładowanie...
-</div>
+<div class="feed" id="feed">Ładowanie...</div>
 
 <nav>
 <div class="nav-item active" onclick="switchCategory('all', this)">Wszystko</div>
@@ -174,6 +187,7 @@ let currentCategory = "all";
 let globalNews = [];
 let previousNewsLinks = [];
 let newNewsLinks = [];
+let isArticleView = false;
 
 function calculateRisk(text){
 const t = text.toLowerCase();
@@ -202,6 +216,8 @@ return "→ Wpływ ograniczony";
 }
 
 async function loadNews(){
+
+isArticleView = false;
 
 const response = await fetch("/api/news");
 const data = await response.json();
@@ -255,12 +271,14 @@ updateThreat(maxRisk);
 
 function openArticle(index){
 
+isArticleView = true;
+
 const n = globalNews[index];
 const desc = n.description?.replace(/<[^>]+>/g,'');
 
 document.getElementById("feed").innerHTML=`
 <div class="article-view">
-<button class="back-btn" onclick="loadNews()">⬅ POWRÓT</button>
+<button class="back-btn" onclick="loadNews()">POWRÓT</button>
 <h2 style="color:var(--green)">${n.title}</h2>
 <p>${desc}</p>
 <div class="impact">
@@ -290,6 +308,26 @@ document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
 el.classList.add("active");
 currentCategory=cat;
 renderNews();
+}
+
+/* Swipe gesture */
+
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener("touchstart", e=>{
+touchStartX = e.changedTouches[0].screenX;
+});
+
+document.addEventListener("touchend", e=>{
+touchEndX = e.changedTouches[0].screenX;
+handleSwipe();
+});
+
+function handleSwipe(){
+if(isArticleView && touchEndX - touchStartX > 80){
+loadNews();
+}
 }
 
 loadNews();
