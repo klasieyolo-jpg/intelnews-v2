@@ -23,10 +23,6 @@ background:var(--bg);
 color:var(--text);
 font-family:"Courier New",monospace;
 overflow-x:hidden;
-touch-action:manipulation;
-overscroll-behavior:none;
--webkit-user-select:none;
--webkit-touch-callout:none;
 }
 
 body{
@@ -75,13 +71,20 @@ margin-bottom:16px;
 }
 
 .tag{font-size:11px;color:var(--green);margin-bottom:6px;}
+
 .title{
 font-size:14px;
 margin-bottom:6px;
 cursor:pointer;
 color:var(--green);
 }
-.summary{font-size:12px;opacity:0.8;margin-bottom:6px;}
+
+.summary{
+font-size:12px;
+opacity:0.8;
+margin-bottom:6px;
+}
+
 .meta{font-size:11px;}
 
 .impact{
@@ -89,13 +92,11 @@ margin-top:8px;
 font-size:11px;
 border-top:1px dashed #133;
 padding-top:6px;
-display:none;
 }
 
 .article-view{
 padding:16px;
 line-height:1.6;
-white-space:pre-line;
 }
 
 .back-btn{
@@ -105,6 +106,16 @@ background:var(--panel);
 border:1px solid #133;
 color:var(--green);
 cursor:pointer;
+}
+
+.source-btn{
+display:inline-block;
+margin-top:14px;
+padding:8px 12px;
+border:1px solid var(--green);
+color:var(--green);
+text-decoration:none;
+font-size:12px;
 }
 
 nav{
@@ -149,7 +160,6 @@ color:var(--green);
 <div class="nav-item" onclick="switchCategory('wojna', this)">Wojny</div>
 <div class="nav-item" onclick="switchCategory('rynki', this)">Rynki</div>
 <div class="nav-item" onclick="switchCategory('cyber', this)">Cyber</div>
-<div class="nav-item" onclick="switchCategory('system', this)">System</div>
 </nav>
 
 <script>
@@ -201,7 +211,6 @@ const feedEl = document.getElementById("feed");
 feedEl.innerHTML = "";
 
 let maxRisk = 0;
-let index = 0;
 
 for(const n of globalNews){
 
@@ -211,43 +220,36 @@ if(currentCategory!=="all" && cat!==currentCategory) continue;
 const risk = calculateRisk(n.title);
 if(risk>maxRisk) maxRisk=risk;
 
-const desc = n.description?.replace(/<[^>]+>/g,'').slice(0,160);
+const desc = n.description?.replace(/<[^>]+>/g,'');
 
 feedEl.innerHTML+=`
 <div class="card">
 <div class="tag">LIVE</div>
-<div class="title" onclick="openArticle('${n.link}')">${n.title}</div>
-<div class="summary">${desc}...</div>
+<div class="title" onclick="openArticle(${globalNews.indexOf(n)})">${n.title}</div>
+<div class="summary">${desc.slice(0,160)}...</div>
 <div class="meta">RISK: ${risk}/10</div>
-<div class="impact" id="impact-${index}">
-${getImpact(n.title)}
-</div>
-<div style="margin-top:6px;font-size:11px;cursor:pointer;color:#0a8;" onclick="toggleImpact(${index})">
-▼ Pokaż wpływ
-</div>
 </div>`;
-index++;
 }
 
 updateThreat(maxRisk);
 }
 
-async function openArticle(url){
+function openArticle(index){
 
-document.getElementById("feed").innerHTML="Ładowanie artykułu...";
-
-const response = await fetch("/api/article?url="+encodeURIComponent(url));
-const data = await response.json();
-
-if(!data.success){
-document.getElementById("feed").innerHTML="Nie udało się pobrać artykułu";
-return;
-}
+const n = globalNews[index];
+const risk = calculateRisk(n.title);
+const desc = n.description?.replace(/<[^>]+>/g,'');
 
 document.getElementById("feed").innerHTML=`
 <div class="article-view">
 <button class="back-btn" onclick="loadNews()">⬅ POWRÓT</button>
-${data.content}
+<h2 style="color:var(--green)">${n.title}</h2>
+<p>${desc}</p>
+<div class="impact">
+<strong>WPŁYW NA RYNEK:</strong><br>
+${getImpact(n.title)}
+</div>
+<a class="source-btn" href="${n.link}" target="_blank">Czytaj oryginał</a>
 </div>`;
 }
 
@@ -263,11 +265,6 @@ el.className="threat medium";
 el.innerText="THREAT: NISKI";
 el.className="threat low";
 }
-}
-
-function toggleImpact(id){
-const el=document.getElementById("impact-"+id);
-el.style.display = el.style.display==="block"?"none":"block";
 }
 
 function switchCategory(cat, el){
