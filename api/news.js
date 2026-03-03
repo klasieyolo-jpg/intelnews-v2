@@ -10,15 +10,23 @@ export default async function handler(req, res) {
     "https://www.aljazeera.com/xml/rss/all.xml"
   ];
 
+  function looksEnglish(text){
+    if(!text) return false;
+    const polishChars = /[ąćęłńóśźż]/i;
+    if(polishChars.test(text)) return false;
+    return true;
+  }
+
   async function translateText(text){
     if(!text) return "";
+    if(!looksEnglish(text)) return text;
 
     try{
       const response = await fetch("https://translate.argosopentech.com/translate",{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          q: text,
+          q: text.slice(0,200),
           source: "auto",
           target: "pl",
           format: "text"
@@ -62,25 +70,22 @@ export default async function handler(req, res) {
     for(const feed of feeds){
       try{
         const items = await fetchFeed(feed);
-        all = all.concat(items.slice(0,5));
+        all = all.concat(items.slice(0,4));
       }catch{}
     }
 
     all.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
 
-    const selected = all.slice(0,20);
+    const selected = all.slice(0,15);
 
-    // 🔥 RÓWNOLEGŁE tłumaczenie (dużo szybciej)
     const translated = await Promise.all(
       selected.map(async item => {
 
         const rawTitle = item.title;
-        const rawDesc = item.description?.replace(/<[^>]+>/g,'').slice(0,300);
+        const rawDesc = item.description?.replace(/<[^>]+>/g,'').slice(0,200);
 
-        const [titlePL, descPL] = await Promise.all([
-          translateText(rawTitle),
-          translateText(rawDesc)
-        ]);
+        const titlePL = await translateText(rawTitle);
+        const descPL = await translateText(rawDesc);
 
         return {
           title: titlePL,
@@ -99,7 +104,7 @@ export default async function handler(req, res) {
       news: translated
     });
 
-  } catch (err){
+  } catch {
     res.status(500).json({
       success:false,
       error:"Backend error"
