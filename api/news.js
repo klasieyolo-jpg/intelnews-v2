@@ -1,25 +1,42 @@
 export default async function handler(req, res) {
 
   const feeds = [
-    // Polska
     "https://www.gov.pl/rss",
     "https://www.money.pl/rss/",
     "https://www.bankier.pl/rss/wiadomosci.xml",
-
-    // Global
     "https://feeds.reuters.com/reuters/worldNews",
     "http://feeds.bbci.co.uk/news/world/rss.xml",
     "https://www.cnbc.com/id/100003114/device/rss/rss.html",
     "https://www.aljazeera.com/xml/rss/all.xml"
   ];
 
-  const highKeywords = ["war","attack","conflict","invasion","missile","cyber","hack","wojna","atak","zamach"];
-  const mediumKeywords = ["bank","oil","gas","sanction","military","crisis","ropa","gaz"];
+  async function translateText(text){
+    if(!text) return "";
+
+    try{
+      const response = await fetch("https://libretranslate.de/translate",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          q: text,
+          source: "auto",
+          target: "pl",
+          format: "text"
+        })
+      });
+
+      const data = await response.json();
+      return data.translatedText || text;
+
+    } catch {
+      return text; // fallback jeśli tłumaczenie padnie
+    }
+  }
 
   function calculateRisk(text){
     const t = text.toLowerCase();
-    if(highKeywords.some(k=>t.includes(k))) return 9;
-    if(mediumKeywords.some(k=>t.includes(k))) return 7;
+    if(t.includes("war")||t.includes("wojna")||t.includes("atak")) return 9;
+    if(t.includes("bank")||t.includes("ropa")||t.includes("oil")) return 7;
     return 4;
   }
 
@@ -46,24 +63,30 @@ export default async function handler(req, res) {
       try{
         const items = await fetchFeed(feed);
         all = all.concat(items.slice(0,5));
-      }catch(e){}
+      }catch{}
     }
 
     all.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
 
-    const cleaned = all.slice(0,25).map(item => {
-      const title = item.title;
-      const description = item.description?.replace(/<[^>]+>/g,'').slice(0,180);
+    const cleaned = [];
 
-      return {
-        title,
-        description,
+    for(const item of all.slice(0,25)){
+
+      const rawTitle = item.title;
+      const rawDesc = item.description?.replace(/<[^>]+>/g,'').slice(0,300);
+
+      const titlePL = await translateText(rawTitle);
+      const descPL = await translateText(rawDesc);
+
+      cleaned.push({
+        title: titlePL,
+        description: descPL,
         pubDate: item.pubDate,
-        risk: calculateRisk(title),
-        category: detectCategory(title),
+        risk: calculateRisk(titlePL),
+        category: detectCategory(titlePL),
         link: item.link
-      };
-    });
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -71,11 +94,10 @@ export default async function handler(req, res) {
       news: cleaned
     });
 
-  } catch (error) {
+  } catch {
     res.status(500).json({
       success: false,
       error: "Backend error"
     });
   }
-
 }
